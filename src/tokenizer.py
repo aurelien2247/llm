@@ -1,74 +1,85 @@
-import importlib
 import tiktoken
 import torch
+from torch.utils.data import Dataset, DataLoader
 
-# Utilisation d'un tokenizer BPE
+
+# ----------------------------
+#  Tokenizer
+# ----------------------------
 tokenizer = tiktoken.get_encoding("gpt2")
 
 
-with open("data/the-verdict.txt", "r", encoding="utf-8") as f:
-    raw_text = f.read()
-
-enc_text = tokenizer.encode(raw_text)
-print(len(enc_text))
-
-context_size = 4 
-enc_sample = enc_text[50:]
-
-x = enc_sample[:context_size]
-y = enc_sample[1:context_size+1]
-
-from torch.utils.data import Dataset, DataLoader
-
-def create_dataloader(txt, batch_size=4, max_length=256, 
-                         stride=128, shuffle=True, drop_last=True,
-                         num_workers=0):
-
-    # Initialisation du tokenizer
-    tokenizer = tiktoken.get_encoding("gpt2")
-
-    # Créer le dataset
-    dataset = GPTDataset(txt, tokenizer, max_length, stride)
-
-    # Créeer le dataloader
-    dataloader = DataLoader(
-        dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        drop_last=drop_last,
-        num_workers=num_workers
-    )
-
-    return dataloader
-
+# ----------------------------
+#  Dataset GPT
+# ----------------------------
 class GPTDataset(Dataset):
+    """
+    Découpe un texte tokenizé en séquences de longueur fixe (max_length)
+    avec un sliding window (stride).
+    Retourne (input_ids, target_ids).
+    """
     def __init__(self, txt, tokenizer, max_length, stride):
+        token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
+        
         self.input_ids = []
         self.target_ids = []
 
-        # Tokenize the entire text
-        token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
-
-        # Use a sliding window to chunk the book into overlapping sequences of max_length
         for i in range(0, len(token_ids) - max_length, stride):
-            input_chunk = token_ids[i:i + max_length]
-            target_chunk = token_ids[i + 1: i + max_length + 1]
-            self.input_ids.append(torch.tensor(input_chunk))
-            self.target_ids.append(torch.tensor(target_chunk))
+            inp = token_ids[i : i + max_length]
+            tgt = token_ids[i + 1 : i + max_length + 1]
+
+            self.input_ids.append(torch.tensor(inp, dtype=torch.long))
+            self.target_ids.append(torch.tensor(tgt, dtype=torch.long))
 
     def __len__(self):
         return len(self.input_ids)
 
     def __getitem__(self, idx):
         return self.input_ids[idx], self.target_ids[idx]
-    
-dataloader = create_dataloader(
-    raw_text, batch_size=1, max_length=4, stride=1, shuffle=False
-)
 
-dataloader = create_dataloader(raw_text, batch_size=8, max_length=4, stride=4, shuffle=False)
 
-data_iter = iter(dataloader)
-inputs, targets = next(data_iter)
-print("Inputs:\n", inputs)
-print("\nTargets:\n", targets)
+# ----------------------------
+#  Create dataloader
+# ----------------------------
+def create_dataloader(text, batch_size=8, max_length=128, stride=128, shuffle=True):
+    dataset = GPTDataset(text, tokenizer, max_length, stride)
+    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
+
+
+# ----------------------------
+#  Load raw text
+# ----------------------------
+with open("data/the-verdict.txt", "r", encoding="utf-8") as f:
+    raw_text = f.read()
+
+
+# ----------------------------
+#  Dataloader example
+# ----------------------------
+max_length = 4
+dataloader = create_dataloader(raw_text, batch_size=8, max_length=max_length, stride=max_length, shuffle=False)
+
+inputs, targets = next(iter(dataloader))
+print("Token IDs:\n", inputs)
+print("Inputs shape:", inputs.shape)
+
+
+# ----------------------------
+#  Embeddings
+# ----------------------------
+vocab_size = 50257
+embed_dim = 256
+
+token_emb = torch.nn.Embedding(vocab_size, embed_dim)
+pos_emb   = torch.nn.Embedding(max_length, embed_dim)
+
+token_embeddings = token_emb(inputs)
+position_ids = torch.arange(max_length)
+position_embeddings = pos_emb(position_ids)
+
+# broadcasting position_embeddings: (max_length, dim) → (batch, max_length, dim)
+input_embeddings = token_embeddings + position_embeddings
+
+print("Token embeddings:", token_embeddings.shape)
+print("Position embeddings:", position_embeddings.shape)
+print("Final input embeddings:", input_embeddings.shape)
