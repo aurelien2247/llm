@@ -8,8 +8,14 @@ class GPTDatasetV1(Dataset):
         self.input_ids = []
         self.target_ids = []
 
-        # Tokenize the entire text
-        token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
+        # Tokenize the entire text. Support both tiktoken-style encoders (which accept
+        # allowed_special) and simpler tokenizer objects (like SimpleTokenizerV2).
+        try:
+            token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
+        except TypeError:
+            token_ids = tokenizer.encode(txt)
+
+        token_ids = list(token_ids)
 
         # Use a sliding window to chunk the book into overlapping sequences of max_length
         for i in range(0, len(token_ids) - max_length, stride):
@@ -26,8 +32,14 @@ class GPTDatasetV1(Dataset):
 
 
 def create_dataloader_v1(txt, batch_size=4, max_length=256,
-                         stride=128, shuffle=True, drop_last=True, num_workers=0):
-    tokenizer = tiktoken.get_encoding("gpt2")
+                         stride=128, shuffle=True, drop_last=True, num_workers=0,
+                         tokenizer=None):
+    """Create a DataLoader. If `tokenizer` is None, defaults to tiktoken/gpt2.
+    You can pass a custom tokenizer object implementing `encode(text)` (e.g. SimpleTokenizerV2).
+    """
+    if tokenizer is None:
+        tokenizer = tiktoken.get_encoding("gpt2")
+
     dataset = GPTDatasetV1(txt, tokenizer, max_length, stride)
     dataloader = DataLoader(
         dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last, num_workers=num_workers)
