@@ -5,7 +5,7 @@ import torch.nn as nn
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_in, d_out, context_length, dropout, num_heads, qkv_bias=False):
         super().__init__()
-        assert d_out % num_heads == 0, "d_out must be divisible by num_heads"
+        assert d_out % num_heads == 0, "d_out doit être divisible par num_heads"
 
         self.d_out = d_out
         self.num_heads = num_heads
@@ -16,12 +16,13 @@ class MultiHeadAttention(nn.Module):
         self.W_value = nn.Linear(d_in, d_out, bias=qkv_bias)
         self.out_proj = nn.Linear(d_out, d_out)
         self.dropout = nn.Dropout(dropout)
-        # causal mask upper triangular
+        # Masque causal triangulaire supérieur
         self.register_buffer("mask", torch.triu(torch.ones(context_length, context_length), diagonal=1))
 
     def forward(self, x):
         b, num_tokens, d_in = x.shape
 
+        # Transformer les vecteurs d'entrée en clés, requêtes et valeurs
         keys = self.W_key(x)
         queries = self.W_query(x)
         values = self.W_value(x)
@@ -34,8 +35,10 @@ class MultiHeadAttention(nn.Module):
         queries = queries.transpose(1, 2)
         values = values.transpose(1, 2)
 
+        # Calculer les scores d'attention
         attn_scores = queries @ keys.transpose(2, 3)
 
+        # Appliquer le masque causal pour prévenir l'attention sur les jetons futurs
         mask_bool = self.mask.bool()[:num_tokens, :num_tokens]
         attn_scores.masked_fill_(mask_bool, -torch.inf)
 

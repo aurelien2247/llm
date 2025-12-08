@@ -1,26 +1,26 @@
-# Creation d'un tokeniser mot/mot 
+# Création d'un tokenizer mot/mot 
 import re
 
-#Encodeur du dataset
-#Etape 1: Tokeniser le texte
+# Encodeur du dataset
+# Étape 1 : Tokeniser le texte
 # On affiche quelques petites choses de base pour voir si tout va bien
 with open("data/the-verdict.txt", "r", encoding="utf-8") as f:
     raw_text = f.read()
     
-#print("Nombre total de caracteres:", len(raw_text))
-#print("Affichage des 99 premiers caractères:",raw_text[:99])
+# print("Nombre total de caractères:", len(raw_text))
+# print("Affichage des 99 premiers caractères:", raw_text[:99])
 
-# Nous devons maintenant créer une lliste de caracteres pour chaque phrase du texte. 
+# Nous devons maintenant créer une liste de caractères pour chaque phrase du texte. 
 preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', raw_text)
 preprocessed = [item.strip() for item in preprocessed if item.strip()]
 
-#print("Text splité:",preprocessed[:30])
+# print("Texte splitté:", preprocessed[:30])
 
-#Etape 2: transformer les tokens en tokens IDs
+# Étape 2 : transformer les tokens en tokens IDs
 # On crée un vocabulaire de tokens uniques en faisant un dictionnaire
 all_words = sorted(set(preprocessed))
 vocab_size = len(all_words)
-#On prend tous les tokens et on ajoute un token spécial pour les mots qui ne sont pas dans notre vocabulaire    
+# On prend tous les tokens et on ajoute un token spécial pour les mots qui ne sont pas dans notre vocabulaire    
 all_tokens = sorted(list(set(preprocessed)))
 all_tokens.extend(["<|endoftext|>", "<|unk|>"])
 
@@ -33,7 +33,7 @@ class SimpleTokenizer:
         self.str_to_int = vocab
         self.int_to_str = { i:s for s,i in vocab.items()}
     
-    #Encodeur du texte/prompt 
+    # Encodeur du texte/prompt 
     def encode(self, text):
         preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', text)
         preprocessed = [item.strip() for item in preprocessed if item.strip()]
@@ -46,10 +46,10 @@ class SimpleTokenizer:
         ids = [self.str_to_int[s] for s in preprocessed]
         return ids
         
-    #Decodeur des token IDs en texte/prompt
+    # Décodeur des token IDs en texte/prompt
     def decode(self, ids):
         text = " ".join([self.int_to_str[i] for i in ids])
-        # Replace spaces before the specified punctuations
+        # Supprimer les espaces avant la ponctuation spécifiée
         text = re.sub(r'\s+([,.:;?!"()\'])', r'\1', text)
         return text
 

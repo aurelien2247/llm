@@ -7,6 +7,7 @@ from generate import generate_text_simple
 
 
 def main():
+    # Configuration du modèle GPT-124M
     GPT_CONFIG_124M = {
         "vocab_size": 50257,
         "context_length": 1024,
@@ -21,16 +22,17 @@ def main():
     model = GPTModel(GPT_CONFIG_124M)
     model.eval()
 
+    # Texte d'entrée pour la génération
     start_context = "Hello, I am"
 
     tokenizer = tiktoken.get_encoding("gpt2")
     encoded = tokenizer.encode(start_context)
     encoded_tensor = torch.tensor(encoded, dtype=torch.long).unsqueeze(0)
 
-    print(f"\n{50*'='}\n{22*' '}IN\n{50*'='}")
-    print("\nInput text:", start_context)
-    print("Encoded input text:", encoded)
-    print("encoded_tensor.shape:", encoded_tensor.shape)
+    print(f"\n{50*'='}\n{22*' '}ENTRÉE\n{50*'='}")
+    print("\nTexte d'entrée:", start_context)
+    print("Texte d'entrée encodé:", encoded)
+    print("Forme du tenseur encodé:", encoded_tensor.shape)
 
     out = generate_text_simple(
         model=model,
@@ -40,10 +42,10 @@ def main():
     )
     decoded_text = tokenizer.decode(out.squeeze(0).tolist())
 
-    print(f"\n\n{50*'='}\n{22*' '}OUT\n{50*'='}")
-    print("\nOutput:", out)
-    print("Output length:", len(out[0]))
-    print("Output text:", decoded_text)
+    print(f"\n\n{50*'='}\n{22*' '}SORTIE\n{50*'='}")
+    print("\nSortie:", out)
+    print("Longueur de la sortie:", len(out[0]))
+    print("Texte de sortie:", decoded_text)
 
 
 if __name__ == "__main__":

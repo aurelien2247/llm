@@ -4,8 +4,8 @@ from typing import Optional
 
 
 def text_to_token_ids(text: str, tokenizer=None) -> torch.Tensor:
-    """Encode text to a batched tensor of token ids (1 x T). If tokenizer is None,
-    defaults to `tiktoken.get_encoding('gpt2')`."""
+    """Encoder le texte en tenseur de token ids groupé (1 x T). Si tokenizer est None,
+    utilise par défaut `tiktoken.get_encoding('gpt2')`."""
     if tokenizer is None:
         tokenizer = tiktoken.get_encoding("gpt2")
     encoded = tokenizer.encode(text, allowed_special={"<|endoftext|>"})
@@ -14,7 +14,7 @@ def text_to_token_ids(text: str, tokenizer=None) -> torch.Tensor:
 
 
 def token_ids_to_text(token_ids: torch.Tensor, tokenizer=None) -> str:
-    """Decode a batched tensor (1 x T) or 1D tensor of token ids back into text."""
+    """Décoder un tenseur groupé (1 x T) ou 1D de token ids en texte."""
     if tokenizer is None:
         tokenizer = tiktoken.get_encoding("gpt2")
     flat = token_ids.squeeze(0)
@@ -22,7 +22,7 @@ def token_ids_to_text(token_ids: torch.Tensor, tokenizer=None) -> str:
 
 
 def calc_loss_batch(input_batch: torch.Tensor, target_batch: torch.Tensor, model: torch.nn.Module, device: Optional[torch.device] = None) -> torch.Tensor:
-    """Compute cross entropy loss for a single batch. Returns a scalar tensor on CPU."""
+    """Calculer la perte d'entropie croisée pour un batch. Retourne un scalaire sur CPU."""
     if device is None:
         device = next(model.parameters()).device
     input_batch = input_batch.to(device)
@@ -33,6 +33,17 @@ def calc_loss_batch(input_batch: torch.Tensor, target_batch: torch.Tensor, model
 
 
 def calc_loss_loader(data_loader, model: torch.nn.Module, device: Optional[torch.device] = None, num_batches: Optional[int] = None) -> float:
+    """Calculer la perte moyenne sur un dataloader.
+    
+    Args:
+        data_loader: DataLoader avec les données d'entraînement/validation.
+        model: Le modèle GPT.
+        device: Dispositif Torch (cpu ou cuda).
+        num_batches: Nombre de batches à évaluer. Si None, évaluer tous.
+    
+    Returns:
+        Perte moyenne.
+    """
     total_loss = 0.0
     if len(data_loader) == 0:
         return float("nan")

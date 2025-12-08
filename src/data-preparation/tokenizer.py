@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 # ----------------------------
 #  Tokenizer
 # ----------------------------
+# Utiliser l'encodage GPT2 de tiktoken
 tokenizer = tiktoken.get_encoding("gpt2")
 
 
@@ -14,16 +15,18 @@ tokenizer = tiktoken.get_encoding("gpt2")
 # ----------------------------
 class GPTDataset(Dataset):
     """
-    Découpe un texte tokenizé en séquences de longueur fixe (max_length)
-    avec un sliding window (stride).
-    Retourne (input_ids, target_ids).
+    Découpe un texte tokenisé en séquences de longueur fixe (max_length)
+    avec une fenêtre glissante (stride).
+    Retourne les paires (input_ids, target_ids) pour l'entraînement.
     """
     def __init__(self, txt, tokenizer, max_length, stride):
+        # Tokeniser le texte entier
         token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
         
         self.input_ids = []
         self.target_ids = []
 
+        # Créer des paires avec la fenêtre glissante
         for i in range(0, len(token_ids) - max_length, stride):
             inp = token_ids[i : i + max_length]
             tgt = token_ids[i + 1 : i + max_length + 1]
@@ -39,29 +42,30 @@ class GPTDataset(Dataset):
 
 
 # ----------------------------
-#  Create dataloader
+#  Créer le dataloader
 # ----------------------------
 def create_dataloader(text, batch_size=8, max_length=128, stride=128, shuffle=True):
+    """Créer un DataLoader à partir du texte brut."""
     dataset = GPTDataset(text, tokenizer, max_length, stride)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
 # ----------------------------
-#  Load raw text
+#  Charger le texte brut
 # ----------------------------
 with open("data/the-verdict.txt", "r", encoding="utf-8") as f:
     raw_text = f.read()
 
 
 # ----------------------------
-#  Dataloader example
+#  Exemple de dataloader
 # ----------------------------
 max_length = 4
 dataloader = create_dataloader(raw_text, batch_size=8, max_length=max_length, stride=max_length, shuffle=False)
 
 inputs, targets = next(iter(dataloader))
-print("Token IDs:\n", inputs)
-print("Inputs shape:", inputs.shape)
+print("Identifiants de jetons:\n", inputs)
+print("Forme des entrées:", inputs.shape)
 
 
 # ----------------------------
@@ -77,9 +81,9 @@ token_embeddings = token_emb(inputs)
 position_ids = torch.arange(max_length)
 position_embeddings = pos_emb(position_ids)
 
-# broadcasting position_embeddings: (max_length, dim) → (batch, max_length, dim)
+# Diffusion de position_embeddings: (max_length, dim) → (batch, max_length, dim)
 input_embeddings = token_embeddings + position_embeddings
 
-print("Token embeddings:", token_embeddings.shape)
-print("Position embeddings:", position_embeddings.shape)
-print("Final input embeddings:", input_embeddings.shape)
+print("Forme des embeddings de jetons:", token_embeddings.shape)
+print("Forme des embeddings de position:", position_embeddings.shape)
+print("Forme des embeddings d'entrée finaux:", input_embeddings.shape)

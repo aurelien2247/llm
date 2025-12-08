@@ -8,8 +8,8 @@ class GPTDatasetV1(Dataset):
         self.input_ids = []
         self.target_ids = []
 
-        # Tokenize the entire text. Support both tiktoken-style encoders (which accept
-        # allowed_special) and simpler tokenizer objects (like SimpleTokenizerV2).
+        # Tokeniser l'intégralité du texte. Supporte les encodeurs de style tiktoken (qui acceptent
+        # allowed_special) et les objets tokenizer plus simples (comme SimpleTokenizerV2).
         try:
             token_ids = tokenizer.encode(txt, allowed_special={"<|endoftext|>"})
         except TypeError:
@@ -17,7 +17,7 @@ class GPTDatasetV1(Dataset):
 
         token_ids = list(token_ids)
 
-        # Use a sliding window to chunk the book into overlapping sequences of max_length
+        # Utiliser une fenêtre glissante pour diviser le texte en séquences chevauchantes de max_length
         for i in range(0, len(token_ids) - max_length, stride):
             input_chunk = token_ids[i:i + max_length]
             target_chunk = token_ids[i + 1: i + max_length + 1]
@@ -34,8 +34,8 @@ class GPTDatasetV1(Dataset):
 def create_dataloader_v1(txt, batch_size=4, max_length=256,
                          stride=128, shuffle=True, drop_last=True, num_workers=0,
                          tokenizer=None):
-    """Create a DataLoader. If `tokenizer` is None, defaults to tiktoken/gpt2.
-    You can pass a custom tokenizer object implementing `encode(text)` (e.g. SimpleTokenizerV2).
+    """Créer un DataLoader. Si `tokenizer` est None, utilise par défaut tiktoken/gpt2.
+    Vous pouvez passer un objet tokenizer personnalisé implémentant `encode(text)` (ex. SimpleTokenizerV2).
     """
     if tokenizer is None:
         tokenizer = tiktoken.get_encoding("gpt2")

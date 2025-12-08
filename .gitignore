@@ -1,3 +1,14 @@
 *.pyc
 __pycache__/
 .DS_Store
+
+# Modèles entraînés et fichiers de grande taille
+*.pt
+*.pth
+*.ckpt
+*.pdf
+
+# Environnement virtuel
+.venv/
+venv/
+env/
