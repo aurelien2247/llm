@@ -24,6 +24,7 @@ from decoding import (
     generate_text_top_k,
     generate_text_top_p
 )
+from messages import MODEL_LOADED, error_not_found, MISSING_CHECKPOINT_HELP
 
 
 def main():
@@ -37,10 +38,10 @@ def main():
         model.load_state_dict(torch.load(PATHS['model_checkpoint'], map_location=device))
         model.to(device)
         model.eval()
-        print("✓ Modèle chargé avec succès\n")
+        print(MODEL_LOADED)
     except FileNotFoundError:
-        print(f"✗ ERREUR: {PATHS['model_checkpoint']} non trouvé")
-        print("  Veuillez d'abord entraîner le modèle avec: python3 train.py")
+        print(error_not_found(PATHS['model_checkpoint']))
+        print(MISSING_CHECKPOINT_HELP)
         return
 
     # Configuration

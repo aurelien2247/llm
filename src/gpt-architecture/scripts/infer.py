@@ -28,6 +28,7 @@ from decoding import (
     generate_text_top_k,
     generate_text_top_p
 )
+from messages import MODEL_LOADED, error_not_found, MISSING_CHECKPOINT_HELP
 
 
 def main():
@@ -99,10 +100,10 @@ def main():
         model.load_state_dict(torch.load(args.model_path, map_location=device))
         model.to(device)
         model.eval()
-        print("✓ Modèle chargé avec succès\n")
+        print(MODEL_LOADED)
     except FileNotFoundError:
-        print(f"✗ ERREUR: {args.model_path} non trouvé")
-        print("  Veuillez d'abord entraîner le modèle avec: python3 train.py")
+        print(error_not_found(args.model_path))
+        print(MISSING_CHECKPOINT_HELP)
         return
 
     # Tokenizer

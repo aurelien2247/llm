@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, '..')
 from decoding import softmax_avec_temperature
+from messages import graph_saved
 
 
 def main():
@@ -88,7 +89,7 @@ def main():
 
     plt.tight_layout()
     plt.savefig('temperature-visualization.pdf', dpi=300, bbox_inches='tight')
-    print("✓ Graphique sauvegardé dans 'temperature-visualization.pdf'\n")
+    print(graph_saved('temperature-visualization.pdf'))
     # plt.show()  # Désactivé pour éviter de bloquer le script en mode headless
 
     # Analyse de l'effet de la température
