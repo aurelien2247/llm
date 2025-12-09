@@ -1,17 +1,33 @@
+"""Couches élémentaires du modèle Transformer."""
+
 import torch
 import torch.nn as nn
-from attention import MultiHeadAttention
+from .attention import MultiHeadAttention
 
 
 class LayerNorm(nn.Module):
     """Normalisation de couche avec paramètres d'échelle et de décalage apprendre."""
+    
     def __init__(self, emb_dim):
+        """Initialiser la normalisation de couche.
+        
+        Args:
+            emb_dim: Dimension de l'embedding.
+        """
         super().__init__()
         self.eps = 1e-5
         self.scale = nn.Parameter(torch.ones(emb_dim))
         self.shift = nn.Parameter(torch.zeros(emb_dim))
 
     def forward(self, x):
+        """Appliquer la normalisation de couche.
+        
+        Args:
+            x: Tenseur d'entrée.
+        
+        Returns:
+            Tenseur normalisé.
+        """
         # Normaliser autour de la moyenne et variance
         mean = x.mean(dim=-1, keepdim=True)
         var = x.var(dim=-1, keepdim=True, unbiased=False)
@@ -21,10 +37,20 @@ class LayerNorm(nn.Module):
 
 class GELU(nn.Module):
     """Fonction d'activation GELU (Gaussian Error Linear Unit)."""
+    
     def __init__(self):
+        """Initialiser l'activation GELU."""
         super().__init__()
 
     def forward(self, x):
+        """Appliquer l'activation GELU.
+        
+        Args:
+            x: Tenseur d'entrée.
+        
+        Returns:
+            Tenseur après application de GELU.
+        """
         return 0.5 * x * (1 + torch.tanh(
             torch.sqrt(torch.tensor(2.0 / torch.pi)) *
             (x + 0.044715 * torch.pow(x, 3))
@@ -33,7 +59,13 @@ class GELU(nn.Module):
 
 class FeedForward(nn.Module):
     """Couche de rétroaction (Feed-Forward) avec expansion-réduction."""
+    
     def __init__(self, cfg):
+        """Initialiser la couche feed-forward.
+        
+        Args:
+            cfg: Dictionnaire de configuration contenant "emb_dim".
+        """
         super().__init__()
         self.layers = nn.Sequential(
             nn.Linear(cfg["emb_dim"], 4 * cfg["emb_dim"]),
@@ -42,12 +74,26 @@ class FeedForward(nn.Module):
         )
 
     def forward(self, x):
+        """Appliquer la couche feed-forward.
+        
+        Args:
+            x: Tenseur d'entrée.
+        
+        Returns:
+            Tenseur de sortie.
+        """
         return self.layers(x)
 
 
 class TransformerBlock(nn.Module):
     """Bloc Transformer combinant l'attention multi-têtes et le rétroaction."""
+    
     def __init__(self, cfg):
+        """Initialiser le bloc Transformer.
+        
+        Args:
+            cfg: Dictionnaire de configuration.
+        """
         super().__init__()
         self.att = MultiHeadAttention(
             d_in=cfg["emb_dim"],
@@ -62,6 +108,14 @@ class TransformerBlock(nn.Module):
         self.drop_shortcut = nn.Dropout(cfg["drop_rate"])
 
     def forward(self, x):
+        """Forward pass du bloc Transformer.
+        
+        Args:
+            x: Tenseur d'entrée.
+        
+        Returns:
+            Tenseur de sortie.
+        """
         # Sous-couche 1 : Attention multi-têtes avec connexion de résidu
         shortcut = x
         x = self.norm1(x)

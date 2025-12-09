@@ -1,9 +1,23 @@
+"""Implémentation de l'attention multi-têtes avec masque causal."""
+
 import torch
 import torch.nn as nn
 
 
 class MultiHeadAttention(nn.Module):
+    """Attention multi-têtes avec masque causal pour prévenir l'attention sur les jetons futurs."""
+    
     def __init__(self, d_in, d_out, context_length, dropout, num_heads, qkv_bias=False):
+        """Initialiser la couche d'attention multi-têtes.
+        
+        Args:
+            d_in: Dimension d'entrée.
+            d_out: Dimension de sortie.
+            context_length: Longueur maximale du contexte.
+            dropout: Taux de dropout.
+            num_heads: Nombre de têtes d'attention.
+            qkv_bias: Utiliser des biais pour les projections query/key/value.
+        """
         super().__init__()
         assert d_out % num_heads == 0, "d_out doit être divisible par num_heads"
 
@@ -20,6 +34,14 @@ class MultiHeadAttention(nn.Module):
         self.register_buffer("mask", torch.triu(torch.ones(context_length, context_length), diagonal=1))
 
     def forward(self, x):
+        """Forward pass de l'attention multi-têtes.
+        
+        Args:
+            x: Tenseur d'entrée de forme (batch_size, seq_len, d_in).
+        
+        Returns:
+            Tenseur de contexte de forme (batch_size, seq_len, d_out).
+        """
         b, num_tokens, d_in = x.shape
 
         # Transformer les vecteurs d'entrée en clés, requêtes et valeurs

@@ -1,7 +1,11 @@
-import torch
+"""Module training: Fonctions utilitaires d'entraînement.
 
-from utils import calc_loss_batch, calc_loss_loader, text_to_token_ids, token_ids_to_text
-from generate import generate_text_simple
+Contient les fonctions principales pour l'entraînement du modèle GPT.
+"""
+
+import torch
+from core import calc_loss_batch, calc_loss_loader, text_to_token_ids, token_ids_to_text
+from decoding import generate_text_simple
 
 
 def generate_and_print_sample(model, tokenizer, device, start_context):
@@ -134,7 +138,7 @@ def plot_losses(epochs_seen, tokens_seen, train_losses, val_losses, savepath="lo
     fig.tight_layout()  # Ajuster la disposition pour faire de la place
     plt.savefig(savepath)
     print(f"Graphique sauvegardé dans {savepath}")
-    plt.show()
+    # plt.show()  # Désactivé pour éviter de bloquer le script en mode headless
 
 
 __all__ = ["train_model_simple", "evaluate_model", "generate_and_print_sample", "plot_losses"]

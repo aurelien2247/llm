@@ -1,10 +1,13 @@
+"""Modèle GPT implémentant l'architecture Transformer."""
+
 import torch
 import torch.nn as nn
-from layers import LayerNorm, TransformerBlock
+from .layers import LayerNorm, TransformerBlock
 
 
 class GPTModel(nn.Module):
     """Modèle GPT implémentant l'architecture Transformer pour la génération de texte."""
+    
     def __init__(self, cfg):
         """Initialiser le modèle GPT avec la configuration donnée.
         

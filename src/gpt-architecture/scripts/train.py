@@ -1,24 +1,32 @@
+"""
+Script principal d'entraînement du modèle GPT.
+
+Ce script:
+1. Charge les données textuelles
+2. Crée les dataloaders train/val
+3. Entraîne le modèle GPT-124M
+4. Sauvegarde le checkpoint
+5. Trace les courbes de perte (optional, nécessite matplotlib)
+
+Utilisation:
+    python3 train.py
+"""
+
+import sys
 import time
 import torch
 import tiktoken
 
-from model import GPTModel
+# Importer depuis les modules locaux (chemin relatif)
+sys.path.insert(0, '..')
+from config import GPT_CONFIG_124M, TRAINING_CONFIG, PATHS
+from core import GPTModel
 from data import create_dataloader_v1
 from training import train_model_simple, plot_losses
 
 
 def main():
-    # Configuration
-    GPT_CONFIG_124M = {
-        "vocab_size": 50257,
-        "context_length": 1024,
-        "emb_dim": 768,
-        "n_heads": 12,
-        "n_layers": 12,
-        "drop_rate": 0.1,
-        "qkv_bias": False
-    }
-
+    """Fonction principale d'entraînement."""
     # Configuration du dispositif
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Utilisation du dispositif: {device}")
@@ -26,16 +34,16 @@ def main():
     # Charger le texte
     print("Chargement des données textuelles...")
     try:
-        with open("data/the-verdict.txt", "r", encoding="utf-8") as f:
+        with open(f"../{PATHS['data_file']}", "r", encoding="utf-8") as f:
             raw_text = f.read()
     except FileNotFoundError:
-        print("ERREUR: data/the-verdict.txt introuvable")
+        print(f"ERREUR: {PATHS['data_file']} introuvable")
         return
 
     print(f"Texte chargé: {len(raw_text)} caractères")
 
     # Diviser en entraînement et validation
-    train_ratio = 0.90
+    train_ratio = PATHS['train_split']
     split_idx = int(train_ratio * len(raw_text))
     train_data = raw_text[:split_idx]
     val_data = raw_text[split_idx:]
@@ -48,9 +56,9 @@ def main():
 
     train_loader = create_dataloader_v1(
         train_data,
-        batch_size=4,
-        max_length=256,
-        stride=128,
+        batch_size=TRAINING_CONFIG['batch_size'],
+        max_length=TRAINING_CONFIG['max_length'],
+        stride=TRAINING_CONFIG['stride'],
         shuffle=True,
         drop_last=True,
         tokenizer=tokenizer
@@ -58,9 +66,9 @@ def main():
 
     val_loader = create_dataloader_v1(
         val_data,
-        batch_size=4,
-        max_length=256,
-        stride=128,
+        batch_size=TRAINING_CONFIG['batch_size'],
+        max_length=TRAINING_CONFIG['max_length'],
+        stride=TRAINING_CONFIG['stride'],
         shuffle=False,
         drop_last=False,
         tokenizer=tokenizer
@@ -70,22 +78,25 @@ def main():
 
     # Initialiser le modèle et l'optimiseur
     print("\nInitialisation du modèle...")
-    torch.manual_seed(123)
+    torch.manual_seed(TRAINING_CONFIG['seed'])
     model = GPTModel(GPT_CONFIG_124M)
     model.to(device)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.0004, weight_decay=0.1)
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=TRAINING_CONFIG['learning_rate'],
+        weight_decay=TRAINING_CONFIG['weight_decay']
+    )
 
     # Entraîner
     print("Démarrage de l'entraînement...\n")
     start_time = time.time()
 
-    num_epochs = 10
     train_losses, val_losses, tokens_seen = train_model_simple(
         model, train_loader, val_loader, optimizer, device,
-        num_epochs=num_epochs,
-        eval_freq=5,
-        eval_iter=5,
+        num_epochs=TRAINING_CONFIG['num_epochs'],
+        eval_freq=TRAINING_CONFIG['eval_freq'],
+        eval_iter=TRAINING_CONFIG['eval_iter'],
         start_context="Every effort moves you",
         tokenizer=tokenizer
     )
@@ -96,15 +107,18 @@ def main():
 
     # Sauvegarder le checkpoint du modèle
     print("\nSauvegarde du checkpoint du modèle...")
-    checkpoint_path = "gpt-model.pt"
+    checkpoint_path = PATHS['model_checkpoint']
     torch.save(model.state_dict(), checkpoint_path)
     print(f"Modèle sauvegardé dans {checkpoint_path}")
 
     # Tracer les pertes (optionnel, nécessite matplotlib)
     try:
         print("\nTraçage des pertes...")
-        epochs_tensor = torch.linspace(0, num_epochs, len(train_losses))
-        plot_losses(epochs_tensor, tokens_seen, train_losses, val_losses, savepath="loss-plot.pdf")
+        epochs_tensor = torch.linspace(0, TRAINING_CONFIG['num_epochs'], len(train_losses))
+        plot_losses(
+            epochs_tensor, tokens_seen, train_losses, val_losses,
+            savepath=PATHS['loss_plot']
+        )
     except ImportError:
         print("matplotlib n'est pas installé; skip du graphique des pertes")
         print("Pour installer: pip install matplotlib")

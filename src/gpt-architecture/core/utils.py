@@ -1,3 +1,5 @@
+"""Utilitaires pour le modèle GPT."""
+
 import torch
 import tiktoken
 from typing import Optional
