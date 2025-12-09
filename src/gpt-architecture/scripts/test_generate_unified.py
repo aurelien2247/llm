@@ -52,7 +52,12 @@ def main():
     for p in candidates:
         try:
             if os.path.exists(p):
-                model.load_state_dict(torch.load(p, map_location=device))
+                ckpt = torch.load(p, map_location=device)
+                if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+                    model.load_state_dict(ckpt["model_state_dict"])
+                else:
+                    model.load_state_dict(ckpt)
+
                 model.to(device)
                 model.eval()
                 print(model_loaded_from(p))

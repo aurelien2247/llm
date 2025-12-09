@@ -105,11 +105,14 @@ def main():
     execution_time_minutes = (end_time - start_time) / 60
     print(f"\nEntraînement terminé en {execution_time_minutes:.2f} minutes.")
 
-    # Sauvegarder le checkpoint du modèle
-    print("\nSauvegarde du checkpoint du modèle...")
+    # Sauvegarder le checkpoint du modèle et de l'optimiseur
+    print("\nSauvegarde du checkpoint du modèle et de l'optimiseur...")
     checkpoint_path = PATHS['model_checkpoint']
-    torch.save(model.state_dict(), checkpoint_path)
-    print(f"Modèle sauvegardé dans {checkpoint_path}")
+    torch.save({
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+    }, checkpoint_path)
+    print(f"Checkpoint (model + optimizer) sauvegardé dans {checkpoint_path}")
 
     # Tracer les pertes (optionnel, nécessite matplotlib)
     try:

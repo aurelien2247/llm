@@ -97,13 +97,24 @@ def main():
     model = GPTModel(GPT_CONFIG_124M)
     
     try:
-        model.load_state_dict(torch.load(args.model_path, map_location=device))
+        ckpt = torch.load(args.model_path, map_location=device)
+        # Supporter deux formats de checkpoints :
+        # - un state_dict pur (ancien format)
+        # - un dict contenant 'model_state_dict' (nouveau format)
+        if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+            model.load_state_dict(ckpt["model_state_dict"])
+        else:
+            model.load_state_dict(ckpt)
+
         model.to(device)
         model.eval()
         print(MODEL_LOADED)
     except FileNotFoundError:
         print(error_not_found(args.model_path))
         print(MISSING_CHECKPOINT_HELP)
+        return
+    except Exception as e:
+        print(f"Erreur lors du chargement du checkpoint: {e}")
         return
 
     # Tokenizer

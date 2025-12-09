@@ -35,13 +35,21 @@ def main():
     model = GPTModel(GPT_CONFIG_124M)
     
     try:
-        model.load_state_dict(torch.load(PATHS['model_checkpoint'], map_location=device))
+        ckpt = torch.load(PATHS['model_checkpoint'], map_location=device)
+        if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+            model.load_state_dict(ckpt["model_state_dict"])
+        else:
+            model.load_state_dict(ckpt)
+
         model.to(device)
         model.eval()
         print(MODEL_LOADED)
     except FileNotFoundError:
         print(error_not_found(PATHS['model_checkpoint']))
         print(MISSING_CHECKPOINT_HELP)
+        return
+    except Exception as e:
+        print(f"Erreur lors du chargement du checkpoint: {e}")
         return
 
     # Configuration
