@@ -13,6 +13,7 @@ from .strategies import (
     top_p_sampling
 )
 from .generator import (
+    generate,  # Fonction unifiée (recommandée)
     generate_text_simple,
     generate_text_temperature,
     generate_text_top_k,
@@ -24,6 +25,7 @@ __all__ = [
     "echantillonner_multinomial",
     "top_k_sampling",
     "top_p_sampling",
+    "generate",  # Fonction unifiée
     "generate_text_simple",
     "generate_text_temperature",
     "generate_text_top_k",

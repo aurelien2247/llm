@@ -36,6 +36,9 @@ gpt-architecture/
 │   ├── train.py                   # Entraînement complet du modèle
 │   ├── infer.py                   # Inférence avec différentes stratégies
 │   ├── demo.py                    # Démonstration des stratégies côte à côte
+│   ├── demo_topk.py               # Démonstration pédagogique du top-k
+│   ├── test_generate_unified.py   # Tests/validation de la fonction `generate()` unifiée
+│   ├── messages.py                # Messages partagés entre scripts
 │   └── visualize.py               # Visualisation de température (PDF)
 │
 ├── training.py                    # 📚 Utilitaires d'entraînement (train_model_simple, etc.)
@@ -135,15 +138,27 @@ python3 demo.py
 
 Affiche 6 variantes côte à côte avec analyses.
 
-### 4️⃣ Visualiser l'effet température
+### 4️⃣ Démonstration Top-K Sampling (pédagogique)
+
+```bash
+python3 demo_topk.py
+```
+
+Démonstration étape par étape du top-k sampling :
+- Comment les tokens absurdes sont éliminés
+- Comparaison avant/après filtrage
+- Explication du masquage avec `-inf`
+
+### 5️⃣ Visualiser l'effet température
 
 ```bash
 python3 visualize.py
 ```
 
-Génère `temperature-visualization.pdf`.
+### 🔬 Test unifié de génération
+
 ```bash
-python3 src/gpt-architecture/main.py
+python3 test_generate_unified.py
 ```
 
 ## 🧠 Configuration du modèle
