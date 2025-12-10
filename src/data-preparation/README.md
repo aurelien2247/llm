@@ -1,5 +1,5 @@
 <h1 align="center">
-    LLM from scratch
+    Apprentissage du fonctionnement d'un tokenizer
 </h1>
 
 <h4 align="center"> Ceci est un petit projet qui m'a permis de découvrir les étapes basiques de tokenization et lacréation d'embeddings pour l'entraînement d'un modèle de langage. </h4>
